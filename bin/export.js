@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const fs = require("fs").promises;
 
 require("console-inject");
