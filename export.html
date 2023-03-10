@@ -1,62 +1,66 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<head>
+	<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
 
-    <title>Draw.io exporter</title>
+	<title>Draw.io exporter</title>
 
-    <link
-      rel="stylesheet"
-      href="vendor/drawio/src/main/webapp/mxgraph/css/common.css"
-      charset="UTF-8"
-      type="text/css"
-    />
-    <style>
-      body {
-        margin: 0;
-      }
+	<link
+		charset="UTF-8"
+		href="vendor/drawio/src/main/webapp/mxgraph/css/common.css"
+		rel="stylesheet"
+		type="text/css"
+	/>
+	<style>
+		body {
+			margin: 0;
+		}
 
-      @media print {
-        span.MathJax_SVG svg {
-          shape-rendering: crispEdges;
-        }
-        table.mxPageSelector {
-          display: none;
-        }
-        hr.mxPageBreak {
-          display: none;
-        }
-      }
+		@media print {
+			span.MathJax_SVG svg {
+				shape-rendering: crispEdges;
+			}
 
-      @media screen {
-        table.mxPageSelector {
-          position: fixed;
-          right: 10px;
-          top: 10px;
-          font-family: Arial;
-          font-size: 10pt;
-          border: solid 1px darkgray;
-          background: white;
-          border-collapse: collapse;
-        }
-        table.mxPageSelector td {
-          border: solid 1px gray;
-          padding: 4px;
-        }
-        body.mxPage {
-          background: gray;
-        }
-      }
-    </style>
+			table.mxPageSelector {
+				display: none;
+			}
 
-    <script>
-      const mxLoadStylesheets = false;
-    </script>
-    <script src="vendor/drawio/src/main/webapp/js/app.min.js"></script>
-    <script>
-      Editor.initMath("vendor/drawio/src/main/webapp/math/MathJax.js");
-    </script>
-    <script src="export.js"></script>
-  </head>
-  <body></body>
+			hr.mxPageBreak {
+				display: none;
+			}
+		}
+
+		@media screen {
+			table.mxPageSelector {
+				position: fixed;
+				right: 10px;
+				top: 10px;
+				font-family: Arial;
+				font-size: 10pt;
+				border: solid 1px darkgray;
+				background: white;
+				border-collapse: collapse;
+			}
+
+			table.mxPageSelector td {
+				border: solid 1px gray;
+				padding: 4px;
+			}
+
+			body.mxPage {
+				background: gray;
+			}
+		}
+	</style>
+
+	<script>
+		const mxLoadStylesheets = false;
+	</script>
+	<script src="vendor/drawio/src/main/webapp/js/app.min.js"></script>
+	<script>
+		Editor.initMath("vendor/drawio/src/main/webapp/math/MathJax.js");
+	</script>
+	<script src="export.js"></script>
+</head>
+<body></body>
 </html>
