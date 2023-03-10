@@ -4,13 +4,13 @@ const puppeteer = require("puppeteer");
 const Jimp = require("jimp");
 
 describe("export", () => {
-	const EXPORT_URL =
-		"file://" + path.normalize(path.join(__dirname, "/../../export.html"));
+	const EXPORT_URL = `file://${path.normalize(path.join(__dirname, "/../../export.html"))}`;
 	const FIXTURES = path.normalize(path.join(__dirname, "../fixtures"));
 
 	let browser, page;
 
 	beforeAll(async () => {
+		jest.setTimeout(30000);
 		browser = await puppeteer.launch();
 	});
 	afterAll(async () => await browser.close());

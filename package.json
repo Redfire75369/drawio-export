@@ -2,16 +2,13 @@
 	"name": "@redfire/drawio-export",
 	"version": "0.2.0",
 	"description": "Draw.io Exports via Puppeteer",
-	"keywords": [
-		"drawio",
-		"export"
-	],
 	"license": "MIT",
+	"author": "Luke Carrier <luke@carrier.im>",
+	"packageManager": "yarn@3.4.1",
+	"main": "index.js",
+	"repository": "github:Redfire75369/drawio-export",
 	"homepage": "https://github.com/Redfire75369/drawio-export",
 	"bugs": "https://github.com/Redfire75369/drawio-export/issues",
-	"repository": "github:Redfire75369/drawio-export",
-	"author": "Luke Carrier <luke@carrier.im>",
-	"main": "index.js",
 	"scripts": {
 		"export": "node bin/export.js",
 		"test": "jest"
@@ -26,5 +23,11 @@
 		"jest-image-snapshot": "4.5.1",
 		"jimp": "0.16.13"
 	},
-	"packageManager": "yarn@3.4.1"
+	"peerDependencies": {
+		"puppeteer": "13.7.0"
+	},
+	"keywords": [
+		"drawio",
+		"export"
+	]
 }
