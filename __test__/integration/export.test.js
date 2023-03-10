@@ -4,8 +4,8 @@ const puppeteer = require("puppeteer");
 const Jimp = require("jimp");
 
 describe("export", () => {
-	const EXPORT_URL = `file://${path.normalize(path.join(__dirname, "/../../export.html"))}`;
-	const FIXTURES = path.normalize(path.join(__dirname, "../fixtures"));
+	const exportUrl = `file://${path.normalize(path.join(__dirname, "/../../export.html"))}`;
+	const fixtures = path.normalize(path.join(__dirname, "../fixtures"));
 
 	let browser, page;
 
@@ -18,14 +18,14 @@ describe("export", () => {
 	beforeEach(async () => {
 		page = await browser.newPage();
 
-		await page.goto(EXPORT_URL, {
+		await page.goto(exportUrl, {
 			waitUntil: "networkidle0",
 		});
 	});
 	afterEach(async () => await page.close());
 
-	async function render(inputFilename, pageIndex, format) {
-		const input = await fs.readFile(path.join(FIXTURES, inputFilename));
+	async function render(inputFileName, pageIndex, format) {
+		const input = await fs.readFile(path.join(fixtures, inputFileName));
 
 		await page.evaluate(
 			(renderArgs) => {
