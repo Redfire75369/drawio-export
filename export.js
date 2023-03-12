@@ -5,8 +5,7 @@ const TRANSPARENT_FORMATS = ["png", "svg"];
 const BORDER = 2;
 
 const XML_PROLOG = '<?xml version="1.0" encoding="UTF-8"?>';
-const SVG_DOCTYPE =
-	'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+const SVG_DOCTYPE = '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
 
 function initializeGraph(document) {
 	document.body.innerHTML = "";
@@ -151,22 +150,16 @@ function render(input, pageIndex, format) {
 
 // Exposed for Puppeteer
 function exportSvg(graph, scale) {
-	const background = graph.background;
+	let background = graph.background;
 	if (background == mxConstants.NONE) {
 		background = null;
 	}
 
 	const svgRoot = graph.getSvg(
-		background,
-		scale,
-		BORDER,
-		false,
-		null,
-		true,
-		null,
-		null,
-		null
+		background, scale, BORDER, null, true,
+		null, null, null, null,
+		null, null, false, "diagram", null
 	);
-	const svg = XML_PROLOG + SVG_DOCTYPE + mxUtils.getXml(svgRoot);
-	return svg;
+
+	return XML_PROLOG + SVG_DOCTYPE + mxUtils.getXml(svgRoot);
 }

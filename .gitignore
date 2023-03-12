@@ -5,6 +5,9 @@
 node_modules/*
 yarn-error.log
 
+### TypeScript ###
+**/tsconfig.tsbuildinfo
+
 ### Edtitors ###
 ## WebStorm ##
 .idea/**

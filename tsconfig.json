@@ -1,0 +1,46 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "commonjs",
+		"lib": [
+			"dom",
+			"dom.iterable",
+			"esnext"
+		],
+		"moduleResolution": "node",
+
+		"declarationDir": "dist",
+		"outDir": "dist",
+
+		"alwaysStrict": false,
+		"strict": true,
+
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"importsNotUsedAsValues": "error",
+		"isolatedModules": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+
+		"allowJs": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"incremental": true,
+
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"removeComments": false
+	},
+	"include": [
+		"src/**/*.ts",
+		"__test__/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"vendor/drawio"
+	]
+}
