@@ -30,7 +30,7 @@ describe("export", () => {
 	afterEach(async () => await page.close());
 
 	async function render(inputFileName: string, pageIndex: number, format: Format) {
-		const input = await readFile(join(fixtures, inputFileName));
+		const input = await readFile(join(fixtures, inputFileName), "utf-8");
 
 		await page.evaluate(
 			(args) => {
@@ -38,9 +38,13 @@ describe("export", () => {
 				// we can't easily transfer it across the browser-Puppeteer boundary for
 				// later operations. Store it in the browser's global scope for later.
 				// @ts-ignore
-				window.testGraph = render(...args);
+				const {graph, editorUi} = render(...args);
+				// @ts-ignore
+				window.testGraph = graph;
+				// @ts-ignore
+				window.testEditorUi = editorUi;
 			},
-			[input.toString(), pageIndex, format]
+			[input, pageIndex, format]
 		);
 	}
 
@@ -48,7 +52,7 @@ describe("export", () => {
 		expect.assertions(1);
 
 		await render("flowchart.drawio", 0, Format.JPEG);
-		const screenshot = Buffer.from(await page.screenshot());
+		const screenshot = await page.screenshot();
 		const converter = await read(screenshot);
 		const converted = await converter.getBufferAsync(MIME_PNG);
 
@@ -77,7 +81,7 @@ describe("export", () => {
 		await render("flowchart.drawio", 0, Format.SVG);
 		const svg = await page.evaluate(() => {
 			// @ts-ignore
-			return exportSvg(window.testGraph, 1);
+			return exportSvg(window.testGraph, window.testEditorUi, 1);
 		});
 
 		expect(svg).toMatchSnapshot();

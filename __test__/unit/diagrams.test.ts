@@ -3,7 +3,7 @@ import {render} from "../../src/browser";
 import exportImage from "../../src/export/image";
 
 jest.mock("puppeteer", () => {
-	const puppeteer = jest.requireActual("puppeteer");
+	const puppeteer = {...jest.requireActual("puppeteer")};
 
 	puppeteer.Browser = jest.fn(() => {
 		return {
@@ -49,7 +49,6 @@ jest.mock("puppeteer", () => {
 
 	return puppeteer;
 });
-
 
 describe("launchExporter", () => {
 	it("forwards browser console messages", async () => {

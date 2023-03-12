@@ -7,7 +7,7 @@ import type {Bounds, Exporter} from "../browser";
 
 const border = 2;
 
-export default async function exportImage(exporter: Exporter, input: string, pageIndex: number, format: Format.JPEG | Format.PNG = Format.PNG, debug: boolean = false) {
+export default async function exportImage(exporter: Exporter, input: string, pageIndex: number, format: Format.JPEG | Format.PNG = Format.PNG, debug: boolean = false): Promise<Buffer> {
 	const {bounds, scale} = await render(exporter.page, debug, input, pageIndex, format);
 	const viewport = await setScaledViewport(exporter.page, bounds, scale, debug);
 

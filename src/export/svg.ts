@@ -5,15 +5,16 @@ import type {Exporter} from "../browser";
 import {Format} from "../index";
 
 
-export default async function exportSvg(exporter: Exporter, input: string, pageIndex: number, debug: boolean = false): Promise<string> {
+export default async function exportSvg(exporter: Exporter, input: string, pageIndex: number, transparency: boolean = true, debug: boolean = false): Promise<string> {
 	const {scale} = await render(exporter.page, debug, input, pageIndex, Format.SVG);
 
 	const svg: string = await exporter.page.evaluate(
-		(args) => {
+		async (args) => {
+			debugger;
 			// @ts-ignore
-			return exportSvg(window.graph, ...args);
+			return await exportSvg(window.graph, window.editorUi, ...args);
 		},
-		[scale]
+		[scale, transparency]
 	);
 
 	debugMessage(debug, "Closing Browser");

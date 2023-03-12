@@ -19,13 +19,16 @@ function initializeGraph(document) {
 	graph.setEnabled(false);
 	graph.foldingEnabled = false;
 
-	return {container, graph};
+	const editor = new Editor(true, null, null, graph, false);
+	const editorUi = new EditorUi(editor, null, null);
+
+	return {container, graph, editorUi};
 }
 
 function monkeypatchGraph(graph) {
 	const graphGetLinkForCell = graph.getLinkForCell;
 	graph.getLinkForCell = function (cell) {
-		const link = graphGetLinkForCell.apply(this, arguments);
+		let link = graphGetLinkForCell.apply(this, arguments);
 		if (link != null && this.isCustomLink(link)) {
 			link = null;
 		}
@@ -100,7 +103,7 @@ function scaleGraph(graph) {
 }
 
 function renderPage(document, xmlDoc, format) {
-	const {container, graph} = initializeGraph(document);
+	const {graph, editorUi} = initializeGraph(document);
 	monkeypatchGraph(graph);
 	decodeDiagram(graph, xmlDoc);
 
@@ -110,7 +113,7 @@ function renderPage(document, xmlDoc, format) {
 	);
 	const {bounds, scale} = scaleGraph(graph);
 
-	return {bounds, scale, graph};
+	return {bounds, scale, graph, editorUi};
 }
 
 function writeResultInfo(document, pageCount, pageId, bounds, scale) {
@@ -142,24 +145,27 @@ function render(input, pageIndex, format) {
 	const diagramXmlDoc = diagramNode.ownerDocument;
 	const diagramId = diagrams[pageIndex].getAttribute("id");
 
-	const {bounds, scale, graph} = renderPage(document, diagramXmlDoc, format);
+	const {bounds, scale, graph, editorUi} = renderPage(document, diagramXmlDoc, format);
 	writeResultInfo(document, diagrams.length, diagramId, bounds, scale);
 
-	return graph;
+	console.error("Editor UI", editorUi);
+	return {graph, editorUi};
 }
 
 // Exposed for Puppeteer
-function exportSvg(graph, scale) {
+async function exportSvg(graph, editorUi, scale, transparency) {
 	let background = graph.background;
-	if (background == mxConstants.NONE) {
+	if (background === mxConstants.NONE) {
 		background = null;
 	}
 
-	const svgRoot = graph.getSvg(
-		background, scale, BORDER, null, true,
-		null, null, null, null,
-		null, null, false, "diagram", null
+	let cb;
+	const promise = new Promise(res => cb = res);
+	editorUi.exportSvg(
+		scale, transparency, true, false, false, // scale, transparentBackground, ignoreSelection, addShadow, editable,
+		null, BORDER, null, null, null, // embedImages, border, noCrop, currentPage, linkTarget,
+		null, "diagram", true, // keepTheme, exportType, embedFonts
+		svg => cb(svg),
 	);
-
-	return XML_PROLOG + SVG_DOCTYPE + mxUtils.getXml(svgRoot);
+	return await promise;
 }

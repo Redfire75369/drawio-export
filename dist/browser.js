@@ -51,7 +51,11 @@ async function render(page, debug = false, ...args) {
     (0, utilities_1.debugMessage)(debug, "Rendering Diagram");
     await page.evaluate((args) => {
         // @ts-ignore
-        window.graph = render(...args);
+        const { graph, editorUi } = render(...args);
+        // @ts-ignore
+        window.graph = graph;
+        // @ts-ignore
+        window.editorUi = editorUi;
     }, args);
     (0, utilities_1.debugMessage)(debug, "Awaiting Render Result Information");
     const resultInfo = await page.waitForSelector(resultInfoSelector);
@@ -67,7 +71,7 @@ async function render(page, debug = false, ...args) {
             scale: parseInt(el.getAttribute("data-scale") ?? "0"),
         };
     });
-    (0, utilities_1.debugMessage)(debug, `Result Info (Bounds: ${bounds}, Scale: ${scale}`);
+    (0, utilities_1.debugMessage)(debug, "Result Info with Bounds:", bounds, "Scale:", scale);
     return { bounds, scale };
 }
 exports.render = render;
