@@ -27,21 +27,21 @@ const png_1 = __importDefault(require("./export/png"));
 const svg_1 = __importDefault(require("./export/svg"));
 var Format;
 (function (Format) {
-    Format["PNG"] = "png";
     Format["JPEG"] = "jpeg";
-    Format["SVG"] = "svg";
     Format["PDF"] = "pdf";
+    Format["PNG"] = "png";
+    Format["SVG"] = "svg";
 })(Format = exports.Format || (exports.Format = {}));
 async function exportDiagram(exporter, input, pageIndex, format, debug = false) {
     switch (format) {
-        case Format.PNG:
-            return await (0, png_1.default)(exporter, input, pageIndex, debug);
         case Format.JPEG:
             return await (0, jpeg_1.default)(exporter, input, pageIndex, debug);
-        case Format.SVG:
-            return await (0, svg_1.default)(exporter, input, pageIndex, debug);
         case Format.PDF:
             return await (0, pdf_1.default)(exporter, input, pageIndex, debug);
+        case Format.PNG:
+            return await (0, png_1.default)(exporter, input, pageIndex, debug);
+        case Format.SVG:
+            return await (0, svg_1.default)(exporter, input, pageIndex, debug);
     }
 }
 exports.exportDiagram = exportDiagram;

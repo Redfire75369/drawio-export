@@ -1,29 +1,31 @@
 # Draw.io exports via Puppeteer
 
-Node module for exporting Draw.io diagrams to a range of formats using Puppeteer, designed as a drop-in replacement for the Draw.io desktop CLI.
+Node.js module for exporting Draw.io diagrams to a range of formats using Puppeteer,
+designed as a drop-in replacement for the Draw.io desktop CLI.
 
----
+### Supported Formats
+- JPEG
+- PNG
+- SVG
+- PDF
 
-## Hacking
+## Contributing
 
-We use [`asdf-vm`](https://asdf-vm.com/) with the [`nodejs`](https://github.com/asdf-vm/asdf-nodejs) plugin to manage our tool versions. Complete the setup for `asdf-vm` first, or make sure you have compatible equivalents installed.
+### Setup
 
 After cloning, make sure you get the vendored dependencies:
-
 ```console
 git submodule update --init
 ```
 
-## Testing
+### Testing
 
-Tests are written in [Jest](https://jestjs.io/). To run them:
-
+Tests are written with [Jest](https://jestjs.io/). To run them:
 ```console
-npm test
+yarn test
 ```
 
 Add the `--watch` parameter to re-run the tests when changes are detected:
-
 ```console
-npm test --watch
+yarn test --watch
 ```

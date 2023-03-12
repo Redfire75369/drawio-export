@@ -13,8 +13,9 @@ describe("export", () => {
 	let browser: Browser;
 	let page: Page;
 
+	jest.setTimeout(30000);
+
 	beforeAll(async () => {
-		jest.setTimeout(30000);
 		browser = await puppeteer.launch();
 	});
 	afterAll(async () => await browser.close());

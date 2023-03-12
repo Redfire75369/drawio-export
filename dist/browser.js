@@ -14,7 +14,7 @@ async function launchExporter(options = {}) {
     if (typeof options.timeout !== "number") {
         options.timeout = defaultBrowserTimeout;
     }
-    if (typeof options.callback !== "object") {
+    if (typeof options.callback !== "function") {
         options.callback = closeBrowser;
     }
     if (typeof options.debug !== "boolean") {
@@ -31,14 +31,14 @@ async function launchExporter(options = {}) {
             "--hide-scrollbars",
         ],
     });
-    (0, utilities_1.debugMessage)(options.debug, "Preparing a new page");
+    (0, utilities_1.debugMessage)(options.debug, "Preparing a New Page");
     const page = await browser.newPage();
     page.on("console", (message) => console.debug("Browser:", message.text()));
-    (0, utilities_1.debugMessage)(options.debug, "Navigating to the exporter");
+    (0, utilities_1.debugMessage)(options.debug, "Navigating to the Exporter");
     await page.goto(exportUrl, {
         waitUntil: "networkidle0",
     });
-    (0, utilities_1.debugMessage)(options.debug, `Setting up browser timeout in ${options.timeout} microseconds`);
+    (0, utilities_1.debugMessage)(options.debug, `Setting Up Browser Timeout in ${options.timeout} ms`);
     const timeout = setTimeout(options.callback.bind(null, browser), options.timeout);
     return {
         browser,
@@ -48,12 +48,12 @@ async function launchExporter(options = {}) {
 }
 exports.launchExporter = launchExporter;
 async function render(page, debug = false, ...args) {
-    (0, utilities_1.debugMessage)(debug, "Rendering diagram");
+    (0, utilities_1.debugMessage)(debug, "Rendering Diagram");
     await page.evaluate((args) => {
         // @ts-ignore
         window.graph = render(...args);
     }, args);
-    (0, utilities_1.debugMessage)(debug, "Awaiting render result information");
+    (0, utilities_1.debugMessage)(debug, "Awaiting Render Result Information");
     const resultInfo = await page.waitForSelector(resultInfoSelector);
     // @ts-ignore
     const { bounds, scale } = await resultInfo.evaluate((el) => {
