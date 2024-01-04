@@ -1,6 +1,4 @@
-import {Format, launchExporter} from "../../src";
-import {render} from "../../src/browser";
-import exportImage from "../../src/export/image";
+import Exporter, {Format} from "../../src";
 
 jest.mock("playwright", () => {
 	const playwright = {...jest.requireActual("playwright")};
@@ -54,10 +52,14 @@ describe("launchExporter", () => {
 	it("forwards browser console messages", async () => {
 		expect.assertions(2);
 
-		const {page} = await launchExporter();
+		const exporter = await Exporter.launch();
+		if (!exporter.page) {
+			expect(exporter.page).not.toEqual(null);
+			return;
+		}
 
-		expect(page.on).toHaveBeenCalledTimes(1);
-		expect(page.on).toHaveBeenCalledWith("console", expect.any(Function));
+		expect(exporter.page.on).toHaveBeenCalledTimes(1);
+		expect(exporter.page.on).toHaveBeenCalledWith("console", expect.any(Function));
 	});
 
 	it("sets up a timeout to close the browser after a timeout", async () => {
@@ -67,7 +69,7 @@ describe("launchExporter", () => {
 
 		const callback = jest.fn();
 
-		await launchExporter({
+		await Exporter.launch({
 			timeout: 500,
 			callback,
 		});
@@ -85,11 +87,16 @@ describe("render", () => {
 		expect.assertions(2);
 
 		const args: [string, number, Format] = ["", 0, Format.PNG];
-		const {page} = await launchExporter();
-		await render(page, ...args);
+		const exporter = await Exporter.launch();
+		if (!exporter.page) {
+			expect(exporter.page).not.toEqual(null);
+			return;
+		}
 
-		expect(page.evaluate).toHaveBeenCalledTimes(1);
-		expect(page.evaluate).toHaveBeenCalledWith(expect.any(Function), args);
+		await exporter.render(...args);
+
+		expect(exporter.page.evaluate).toHaveBeenCalledTimes(1);
+		expect(exporter.page.evaluate).toHaveBeenCalledWith(expect.any(Function), args);
 	});
 });
 
@@ -97,8 +104,12 @@ describe("exportImage", () => {
 	it("scales the viewport according to the bounds", async () => {
 		expect.assertions(2);
 
-		const exporter = await launchExporter();
-		await exportImage(exporter, "", 0, Format.PNG);
+		const exporter = await Exporter.launch();
+		if (!exporter.page) {
+			expect(exporter.page).not.toEqual(null);
+			return;
+		}
+		await exporter.exportImage("", 0, Format.PNG);
 
 		expect(exporter.page.setViewportSize).toHaveBeenCalledTimes(1);
 		expect(exporter.page.setViewportSize).toHaveBeenCalledWith({
@@ -110,8 +121,12 @@ describe("exportImage", () => {
 	it("takes a screenshot with the appropriate options", async () => {
 		expect.assertions(2);
 
-		const exporter = await launchExporter();
-		await exportImage(exporter, "", 0, Format.PNG);
+		const exporter = await Exporter.launch();
+		if (!exporter.page) {
+			expect(exporter.page).not.toEqual(null);
+			return;
+		}
+		await exporter.exportImage("", 0, Format.PNG);
 
 		expect(exporter.page.screenshot).toHaveBeenCalledTimes(1);
 		expect(exporter.page.screenshot).toHaveBeenCalledWith({
@@ -128,11 +143,13 @@ describe("exportImage", () => {
 
 		const callback = jest.fn();
 
-		const exporter = await launchExporter({
-			timeout: 500,
-			callback,
-		});
-		await exportImage(exporter, "", 0, Format.PNG);
+		const exporter = await Exporter.launch();
+		if (!exporter.page) {
+			expect(exporter.page).not.toEqual(null);
+			return;
+		}
+		await exporter.exportImage("", 0, Format.PNG);
+		await exporter.close();
 
 		expect(exporter.browser.close).toHaveBeenCalledTimes(1);
 		expect(clearTimeout).toHaveBeenCalledWith(exporter.timeout);

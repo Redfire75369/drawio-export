@@ -7,13 +7,13 @@ import {Format} from "../../src";
 import type {Browser, Page} from "playwright";
 
 describe("export", () => {
-	const exportUrl = `file://${normalize(join(__dirname, "/../../export.html"))}`;
+	const exportUrl = `file://${normalize(join(__dirname, "/../../src/export/index.html"))}`;
 	const fixtures = normalize(join(__dirname, "../fixtures"));
 
 	let browser: Browser;
 	let page: Page;
 
-	jest.setTimeout(60000);
+	jest.setTimeout(30000);
 
 	beforeAll(async () => {
 		browser = await playwright.chromium.launch();

@@ -1,15 +1,37 @@
 /// <reference types="node" />
-export { launchExporter } from "./browser";
-import exportImage from "./export/image";
-import exportPdf from "./export/pdf";
-import exportSvg from "./export/svg";
-import type { Exporter } from "./browser";
+import { type Browser, type Page } from "playwright";
 export declare enum Format {
     JPEG = "jpeg",
     PDF = "pdf",
     PNG = "png",
     SVG = "svg"
 }
-export declare function exportDiagram(exporter: Exporter, input: string, pageIndex: number, format: Format): Promise<string | Buffer>;
-export { exportImage, exportSvg, exportPdf, type Exporter, };
+export interface LaunchOptions {
+    timeout?: number;
+    callback?: (browser: Browser) => () => Promise<void>;
+}
+export interface Bounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+export interface RenderResult {
+    bounds: Bounds;
+    scale: number;
+}
+export default class Exporter {
+    browser: Browser;
+    timeout: ReturnType<typeof setTimeout> | null;
+    page: Page | null;
+    constructor(browser: Browser, timeout: ReturnType<typeof setTimeout> | null);
+    static launch(opt?: LaunchOptions): Promise<Exporter>;
+    render(input: string, pageIndex: number, format: Format): Promise<RenderResult>;
+    init(): Promise<void>;
+    close(): Promise<void>;
+    exportDiagram(input: string, pageIndex: number, format: Format): Promise<string | Buffer>;
+    exportImage(input: string, pageIndex?: number, format?: Format.JPEG | Format.PNG): Promise<Buffer>;
+    exportPdf(input: string, pageIndex?: number): Promise<Buffer>;
+    exportSvg(input: string, pageIndex?: number, transparency?: boolean): Promise<string>;
+}
 //# sourceMappingURL=index.d.ts.map

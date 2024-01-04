@@ -1,17 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportPdf = exports.exportSvg = exports.exportImage = exports.exportDiagram = exports.Format = exports.launchExporter = void 0;
-var browser_1 = require("./browser");
-Object.defineProperty(exports, "launchExporter", { enumerable: true, get: function () { return browser_1.launchExporter; } });
-const image_1 = __importDefault(require("./export/image"));
-exports.exportImage = image_1.default;
-const pdf_1 = __importDefault(require("./export/pdf"));
-exports.exportPdf = pdf_1.default;
-const svg_1 = __importDefault(require("./export/svg"));
-exports.exportSvg = svg_1.default;
+exports.Format = void 0;
+const path_1 = require("path");
+const playwright_1 = require("playwright");
 var Format;
 (function (Format) {
     Format["JPEG"] = "jpeg";
@@ -19,17 +10,131 @@ var Format;
     Format["PNG"] = "png";
     Format["SVG"] = "svg";
 })(Format = exports.Format || (exports.Format = {}));
-async function exportDiagram(exporter, input, pageIndex, format) {
-    switch (format) {
-        case Format.JPEG:
-            return await (0, image_1.default)(exporter, input, pageIndex, Format.JPEG);
-        case Format.PDF:
-            return await (0, pdf_1.default)(exporter, input, pageIndex);
-        case Format.PNG:
-            return await (0, image_1.default)(exporter, input, pageIndex, Format.PNG);
-        case Format.SVG:
-            return await (0, svg_1.default)(exporter, input, pageIndex);
+const DEFAULT_BROWSER_TIMEOUT = 30000;
+const EXPORT_URL = `file://${(0, path_1.normalize)((0, path_1.join)(__dirname, "./export/index.html"))}`;
+const RESULT_INFO_SELECTOR = "#result-info";
+const BORDER = 2;
+class Exporter {
+    browser;
+    timeout;
+    page = null;
+    constructor(browser, timeout) {
+        this.browser = browser;
+        this.timeout = timeout;
+    }
+    static async launch(opt = {}) {
+        const options = Object.assign({
+            timeout: DEFAULT_BROWSER_TIMEOUT,
+            callback: closeBrowser,
+        }, opt);
+        const browser = await playwright_1.chromium.launch({
+            headless: false,
+            args: [
+                "--disable-gpu",
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--hide-scrollbars",
+            ],
+        });
+        const exporter = new Exporter(browser, null);
+        await exporter.init();
+        exporter.timeout = setTimeout(() => options.callback(browser), options.timeout);
+        return exporter;
+    }
+    async render(input, pageIndex, format) {
+        if (!this.page) {
+            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
+        }
+        await this.page.evaluate(([input, pageIndex, format]) => {
+            // @ts-ignore
+            const { graph, editorUi } = render(input, pageIndex, format);
+            // @ts-ignore
+            window.graph = graph;
+            // @ts-ignore
+            window.editorUi = editorUi;
+        }, [input, pageIndex, format]);
+        const resultInfo = await this.page.waitForSelector(RESULT_INFO_SELECTOR, {
+            state: "attached",
+        });
+        const { bounds, scale } = await resultInfo.evaluate((el) => {
+            return {
+                bounds: {
+                    x: parseInt(el.getAttribute("data-bounds-x") ?? "0"),
+                    y: parseInt(el.getAttribute("data-bounds-y") ?? "0"),
+                    width: parseInt(el.getAttribute("data-bounds-width") ?? "0"),
+                    height: parseInt(el.getAttribute("data-bounds-height") ?? "0"),
+                },
+                scale: parseInt(el.getAttribute("data-scale") ?? "0"),
+            };
+        });
+        return { bounds, scale };
+    }
+    async init() {
+        this.page = await this.browser.newPage();
+        this.page.on("console", (message) => console.debug("Browser:", message.text()));
+        await this.page.goto(EXPORT_URL, {
+            waitUntil: "networkidle",
+        });
+    }
+    async close() {
+        await this.browser.close();
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+    }
+    async exportDiagram(input, pageIndex, format) {
+        switch (format) {
+            case Format.JPEG:
+                return await this.exportImage(input, pageIndex, Format.JPEG);
+            case Format.PDF:
+                return await this.exportPdf(input, pageIndex);
+            case Format.PNG:
+                return await this.exportImage(input, pageIndex, Format.PNG);
+            case Format.SVG:
+                return await this.exportSvg(input, pageIndex);
+        }
+    }
+    async exportImage(input, pageIndex = 0, format = Format.PNG) {
+        if (!this.page) {
+            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
+        }
+        const { bounds, scale } = await this.render(input, pageIndex, format);
+        const viewport = {
+            width: Math.ceil(bounds.width * scale) + BORDER,
+            height: Math.ceil(bounds.height * scale) + BORDER,
+        };
+        await this.page.setViewportSize(viewport);
+        const screenshotOptions = { type: format, ...viewport };
+        return await this.page.screenshot(screenshotOptions);
+    }
+    async exportPdf(input, pageIndex = 0) {
+        if (!this.page) {
+            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
+        }
+        await this.render(input, pageIndex, Format.PDF);
+        return await this.page.pdf({
+            format: "A4",
+            printBackground: true,
+        });
+    }
+    async exportSvg(input, pageIndex = 0, transparency = true) {
+        if (!this.page) {
+            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
+        }
+        const { scale } = await this.render(input, pageIndex, Format.SVG);
+        return await this.page.evaluate(async ([scale, transparency]) => {
+            debugger;
+            // @ts-ignore
+            return await exportSvg(window.graph, window.editorUi, scale, transparency);
+        }, [scale, transparency]);
     }
 }
-exports.exportDiagram = exportDiagram;
+exports.default = Exporter;
+function closeBrowser(browser) {
+    return async () => {
+        console.warn("Closing browser from timeout");
+        await browser.close();
+    };
+}
 //# sourceMappingURL=index.js.map
