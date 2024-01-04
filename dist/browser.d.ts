@@ -1,8 +1,8 @@
-import type { Browser, Page } from "puppeteer";
+import type { Browser, Page } from "playwright";
+import type { Format } from "./index";
 export interface LaunchOptions {
     timeout?: number;
     callback?: (browser: Browser) => () => Promise<void>;
-    debug?: boolean;
 }
 export interface Exporter {
     browser: Browser;
@@ -16,7 +16,7 @@ export interface Bounds {
     height: number;
 }
 export declare function launchExporter(options?: LaunchOptions): Promise<Exporter>;
-export declare function render(page: Page, debug?: boolean, ...args: any[]): Promise<{
+export declare function render(page: Page, input: string, pageIndex: number, format: Format): Promise<{
     bounds: Bounds;
     scale: number;
 }>;

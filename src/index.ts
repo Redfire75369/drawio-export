@@ -1,9 +1,7 @@
-export * from "./bin/args";
 export {launchExporter} from "./browser";
 
-import exportJpeg from "./export/jpeg";
+import exportImage from "./export/image";
 import exportPdf from "./export/pdf";
-import exportPng from "./export/png";
 import exportSvg from "./export/svg";
 
 import type {Exporter} from "./browser";
@@ -15,15 +13,22 @@ export enum Format {
 	SVG = "svg",
 }
 
-export async function exportDiagram(exporter: Exporter, input: string, pageIndex: number, format: Format, debug: boolean = false) {
+export async function exportDiagram(exporter: Exporter, input: string, pageIndex: number, format: Format): Promise<string | Buffer> {
 	switch (format) {
 		case Format.JPEG:
-			return await exportJpeg(exporter, input, pageIndex, debug);
+			return await exportImage(exporter, input, pageIndex, Format.JPEG);
 		case Format.PDF:
-			return await exportPdf(exporter, input, pageIndex, debug);
+			return await exportPdf(exporter, input, pageIndex);
 		case Format.PNG:
-			return await exportPng(exporter, input, pageIndex, debug);
+			return await exportImage(exporter, input, pageIndex, Format.PNG);
 		case Format.SVG:
-			return await exportSvg(exporter, input, pageIndex, debug);
+			return await exportSvg(exporter, input, pageIndex);
 	}
+}
+
+export {
+	exportImage,
+	exportSvg,
+	exportPdf,
+	type Exporter,
 }

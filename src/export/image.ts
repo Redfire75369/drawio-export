@@ -1,35 +1,31 @@
 import {render} from "../browser";
 import {Format} from "../index";
-import {debugMessage} from "../utilities";
 
-import type {Page} from "puppeteer";
+import type {Page} from "playwright";
 import type {Bounds, Exporter} from "../browser";
 
 const border = 2;
 
-export default async function exportImage(exporter: Exporter, input: string, pageIndex: number, format: Format.JPEG | Format.PNG = Format.PNG, debug: boolean = false): Promise<Buffer> {
-	const {bounds, scale} = await render(exporter.page, debug, input, pageIndex, format);
-	const viewport = await setScaledViewport(exporter.page, bounds, scale, debug);
+export default async function exportImage(exporter: Exporter, input: string, pageIndex: number, format: Format.JPEG | Format.PNG = Format.PNG): Promise<Buffer> {
+	const {bounds, scale} = await render(exporter.page, input, pageIndex, format);
+	const viewport = await setScaledViewport(exporter.page, bounds, scale);
 
 	const screenshotOptions = {type: format, ...viewport};
-	debugMessage(debug, "Screenshotting the Result with Options:", screenshotOptions);
 	const data = await exporter.page.screenshot(screenshotOptions);
 
-	debugMessage(debug, "Closing Browser");
 	await exporter.browser.close();
 	clearTimeout(exporter.timeout);
 
 	return data;
 }
 
-async function setScaledViewport(page: Page, bounds: Bounds, scale: number, debug: boolean = false) {
+async function setScaledViewport(page: Page, bounds: Bounds, scale: number) {
 	const viewport = {
 		width: Math.ceil(bounds.width * scale) + border,
 		height: Math.ceil(bounds.height * scale) + border,
 	};
 
-	debugMessage(debug, "Using Viewport", viewport);
-	await page.setViewport(viewport);
+	await page.setViewportSize(viewport);
 
 	return viewport;
 }

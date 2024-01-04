@@ -1,6 +1,8 @@
 /// <reference types="node" />
-export * from "./bin/args";
 export { launchExporter } from "./browser";
+import exportImage from "./export/image";
+import exportPdf from "./export/pdf";
+import exportSvg from "./export/svg";
 import type { Exporter } from "./browser";
 export declare enum Format {
     JPEG = "jpeg",
@@ -8,5 +10,6 @@ export declare enum Format {
     PNG = "png",
     SVG = "svg"
 }
-export declare function exportDiagram(exporter: Exporter, input: string, pageIndex: number, format: Format, debug?: boolean): Promise<string | Buffer>;
+export declare function exportDiagram(exporter: Exporter, input: string, pageIndex: number, format: Format): Promise<string | Buffer>;
+export { exportImage, exportSvg, exportPdf, type Exporter, };
 //# sourceMappingURL=index.d.ts.map

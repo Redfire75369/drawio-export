@@ -1,11 +1,7 @@
-// Exposed for testing
 const TRANSPARENT_COLORS = ["", "none"];
 const TRANSPARENT_FORMATS = ["png", "svg"];
 
 const BORDER = 2;
-
-const XML_PROLOG = '<?xml version="1.0" encoding="UTF-8"?>';
-const SVG_DOCTYPE = '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
 
 function initializeGraph(document) {
 	document.body.innerHTML = "";
@@ -42,7 +38,7 @@ function monkeypatchGraph(graph) {
 		if (shape.node != null) {
 			const links = shape.node.getElementsByTagName("a");
 
-			for (const i = 0; i < links.length; i++) {
+			for (let i = 0; i < links.length; i++) {
 				const href = links[i].getAttribute("href");
 				if (href != null && graph.isCustomLink(href)) {
 					links[i].setAttribute("href", "#");
@@ -134,12 +130,12 @@ function writeResultInfo(document, pageCount, pageId, bounds, scale) {
 	document.body.appendChild(indicator);
 }
 
-// Exposed for Puppeteer
+// Exposed for Playwright
 function render(input, pageIndex, format) {
 	console.debug("Rendering page", pageIndex, "as", format);
 
-	const {xmlDoc: rootXmlDoc} = parseInput(input);
-	const diagrams = rootXmlDoc.documentElement.getElementsByTagName("diagram");
+	const {xmlDoc} = parseInput(input);
+	const diagrams = xmlDoc.documentElement.getElementsByTagName("diagram");
 
 	const diagramNode = Editor.parseDiagramNode(diagrams[pageIndex]);
 	const diagramXmlDoc = diagramNode.ownerDocument;
@@ -148,11 +144,11 @@ function render(input, pageIndex, format) {
 	const {bounds, scale, graph, editorUi} = renderPage(document, diagramXmlDoc, format);
 	writeResultInfo(document, diagrams.length, diagramId, bounds, scale);
 
-	console.error("Editor UI", editorUi);
+	console.debug("Editor UI", editorUi);
 	return {graph, editorUi};
 }
 
-// Exposed for Puppeteer
+// Exposed for Playwright
 async function exportSvg(graph, editorUi, scale, transparency) {
 	let background = graph.background;
 	if (background === mxConstants.NONE) {

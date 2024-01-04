@@ -2,32 +2,32 @@ import {Format, launchExporter} from "../../src";
 import {render} from "../../src/browser";
 import exportImage from "../../src/export/image";
 
-jest.mock("puppeteer", () => {
-	const puppeteer = {...jest.requireActual("puppeteer")};
+jest.mock("playwright", () => {
+	const playwright = {...jest.requireActual("playwright")};
 
-	puppeteer.Browser = jest.fn(() => {
+	playwright.Browser = jest.fn(() => {
 		return {
 			close: jest.fn(),
 			newPage: jest.fn(() => {
-				return Promise.resolve(new puppeteer.Page());
+				return Promise.resolve(new playwright.Page());
 			}),
 		};
 	});
 
-	puppeteer.Page = jest.fn(() => {
+	playwright.Page = jest.fn(() => {
 		return {
 			evaluate: jest.fn(),
 			goto: jest.fn(),
 			on: jest.fn(),
 			screenshot: jest.fn(),
-			setViewport: jest.fn(),
+			setViewportSize: jest.fn(),
 			waitForSelector: jest.fn(() => {
-				return Promise.resolve(new puppeteer.ElementHandle());
+				return Promise.resolve(new playwright.ElementHandle());
 			}),
 		};
 	});
 
-	puppeteer.ElementHandle = jest.fn(() => {
+	playwright.ElementHandle = jest.fn(() => {
 		return {
 			evaluate: jest.fn(() => {
 				return Promise.resolve({
@@ -43,11 +43,11 @@ jest.mock("puppeteer", () => {
 		};
 	});
 
-	puppeteer.launch = jest.fn(() => {
-		return Promise.resolve(new puppeteer.Browser());
+	playwright.chromium.launch = jest.fn(() => {
+		return Promise.resolve(new playwright.Browser());
 	});
 
-	return puppeteer;
+	return playwright;
 });
 
 describe("launchExporter", () => {
@@ -70,7 +70,6 @@ describe("launchExporter", () => {
 		await launchExporter({
 			timeout: 500,
 			callback,
-			debug: true
 		});
 		jest.runAllTimers();
 
@@ -85,9 +84,9 @@ describe("render", () => {
 	it("calls render and retrieves result information from the DOM", async () => {
 		expect.assertions(2);
 
-		const args = ["", 0, Format.PNG];
-		const {page} = await launchExporter({debug: true});
-		await render(page, true, ...args);
+		const args: [string, number, Format] = ["", 0, Format.PNG];
+		const {page} = await launchExporter();
+		await render(page, ...args);
 
 		expect(page.evaluate).toHaveBeenCalledTimes(1);
 		expect(page.evaluate).toHaveBeenCalledWith(expect.any(Function), args);
@@ -98,11 +97,11 @@ describe("exportImage", () => {
 	it("scales the viewport according to the bounds", async () => {
 		expect.assertions(2);
 
-		const exporter = await launchExporter({debug: true});
+		const exporter = await launchExporter();
 		await exportImage(exporter, "", 0, Format.PNG);
 
-		expect(exporter.page.setViewport).toHaveBeenCalledTimes(1);
-		expect(exporter.page.setViewport).toHaveBeenCalledWith({
+		expect(exporter.page.setViewportSize).toHaveBeenCalledTimes(1);
+		expect(exporter.page.setViewportSize).toHaveBeenCalledWith({
 			width: 642,
 			height: 482,
 		});
@@ -111,7 +110,7 @@ describe("exportImage", () => {
 	it("takes a screenshot with the appropriate options", async () => {
 		expect.assertions(2);
 
-		const exporter = await launchExporter({debug: true});
+		const exporter = await launchExporter();
 		await exportImage(exporter, "", 0, Format.PNG);
 
 		expect(exporter.page.screenshot).toHaveBeenCalledTimes(1);
@@ -132,7 +131,6 @@ describe("exportImage", () => {
 		const exporter = await launchExporter({
 			timeout: 500,
 			callback,
-			debug: true
 		});
 		await exportImage(exporter, "", 0, Format.PNG);
 

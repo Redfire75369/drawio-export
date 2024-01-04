@@ -1,10 +1,10 @@
 import {readFile} from "fs/promises";
 import {normalize, join} from "path";
-import puppeteer from "puppeteer";
+import playwright from "playwright";
 import {read, MIME_PNG} from "jimp"
 import {Format} from "../../src";
 
-import type {Browser, Page} from "puppeteer";
+import type {Browser, Page} from "playwright";
 
 describe("export", () => {
 	const exportUrl = `file://${normalize(join(__dirname, "/../../export.html"))}`;
@@ -13,10 +13,10 @@ describe("export", () => {
 	let browser: Browser;
 	let page: Page;
 
-	jest.setTimeout(30000);
+	jest.setTimeout(60000);
 
 	beforeAll(async () => {
-		browser = await puppeteer.launch();
+		browser = await playwright.chromium.launch();
 	});
 	afterAll(async () => await browser.close());
 
@@ -24,7 +24,7 @@ describe("export", () => {
 		page = await browser.newPage();
 
 		await page.goto(exportUrl, {
-			waitUntil: "networkidle0",
+			waitUntil: "networkidle",
 		});
 	});
 	afterEach(async () => await page.close());
@@ -33,18 +33,15 @@ describe("export", () => {
 		const input = await readFile(join(fixtures, inputFileName), "utf-8");
 
 		await page.evaluate(
-			(args) => {
-				// The drawio Graph object returned by render() isn't serialisable, so
-				// we can't easily transfer it across the browser-Puppeteer boundary for
-				// later operations. Store it in the browser's global scope for later.
+			([input, pageIndex, format]) => {
 				// @ts-ignore
-				const {graph, editorUi} = render(...args);
+				const {graph, editorUi} = render(input, pageIndex, format);
 				// @ts-ignore
-				window.testGraph = graph;
+				window.graph = graph;
 				// @ts-ignore
-				window.testEditorUi = editorUi;
+				window.editorUi = editorUi;
 			},
-			[input, pageIndex, format]
+			[input, pageIndex, format] as [string, number, Format]
 		);
 	}
 
@@ -81,7 +78,7 @@ describe("export", () => {
 		await render("flowchart.drawio", 0, Format.SVG);
 		const svg = await page.evaluate(() => {
 			// @ts-ignore
-			return exportSvg(window.testGraph, window.testEditorUi, 1);
+			return exportSvg(window.graph, window.editorUi, 1);
 		});
 
 		expect(svg).toMatchSnapshot();

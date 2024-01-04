@@ -1,13 +1,12 @@
 import path from "path";
-import puppeteer from "puppeteer";
-import {debugMessage} from "./utilities";
+import {chromium} from "playwright";
 
-import type {Browser, Page} from "puppeteer";
+import type {Browser, Page} from "playwright";
+import type {Format} from "./index";
 
 export interface LaunchOptions {
 	timeout?: number,
 	callback?: (browser: Browser) => () => Promise<void>,
-	debug?: boolean,
 }
 
 export interface Exporter {
@@ -34,14 +33,9 @@ export async function launchExporter(options: LaunchOptions = {}): Promise<Expor
 	if (typeof options.callback !== "function") {
 		options.callback = closeBrowser;
 	}
-	if (typeof options.debug !== "boolean") {
-		options.debug = false;
-	}
 
-	debugMessage(options.debug, "Launching Browser via Puppeteer");
-
-	const browser = await puppeteer.launch({
-		headless: true,
+	const browser = await chromium.launch({
+		headless: false,
 		args: [
 			"--disable-gpu",
 			"--no-sandbox",
@@ -51,16 +45,13 @@ export async function launchExporter(options: LaunchOptions = {}): Promise<Expor
 		],
 	});
 
-	debugMessage(options.debug, "Preparing a New Page");
 	const page = await browser.newPage();
 	page.on("console", (message) => console.debug("Browser:", message.text()));
 
-	debugMessage(options.debug, "Navigating to the Exporter");
 	await page.goto(exportUrl, {
-		waitUntil: "networkidle0",
+		waitUntil: "networkidle",
 	});
 
-	debugMessage(options.debug, `Setting Up Browser Timeout in ${options.timeout} ms`);
 	const timeout = setTimeout(
 		options.callback.bind(null, browser),
 		options.timeout
@@ -73,21 +64,23 @@ export async function launchExporter(options: LaunchOptions = {}): Promise<Expor
 	};
 }
 
-export async function render(page: Page, debug: boolean = false, ...args: any[]): Promise<{bounds: Bounds, scale: number}> {
-	debugMessage(debug, "Rendering Diagram");
-	await page.evaluate((args) => {
-		// @ts-ignore
-		const {graph, editorUi} = render(...args);
-		// @ts-ignore
-		window.graph = graph;
-		// @ts-ignore
-		window.editorUi = editorUi;
-	}, args);
+export async function render(page: Page, input: string, pageIndex: number, format: Format): Promise<{bounds: Bounds, scale: number}> {
+	await page.evaluate(
+		([input, pageIndex, format]) => {
+			// @ts-ignore
+			const {graph, editorUi} = render(input, pageIndex, format);
+			// @ts-ignore
+			window.graph = graph;
+			// @ts-ignore
+			window.editorUi = editorUi;
+		},
+		[input, pageIndex, format] as [string, number, Format]
+	);
 
-	debugMessage(debug, "Awaiting Render Result Information");
-	const resultInfo = await page.waitForSelector(resultInfoSelector);
+	const resultInfo = await page.waitForSelector(resultInfoSelector, {
+		state: "attached",
+	});
 
-	// @ts-ignore
 	const {bounds, scale} = await resultInfo.evaluate((el) => {
 		return {
 			bounds: {
@@ -99,7 +92,6 @@ export async function render(page: Page, debug: boolean = false, ...args: any[])
 			scale: parseInt(el.getAttribute("data-scale") ?? "0"),
 		};
 	});
-	debugMessage(debug, "Result Info with Bounds:", bounds, "Scale:", scale);
 
 	return {bounds, scale};
 }

@@ -5,8 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.render = exports.launchExporter = void 0;
 const path_1 = __importDefault(require("path"));
-const puppeteer_1 = __importDefault(require("puppeteer"));
-const utilities_1 = require("./utilities");
+const playwright_1 = require("playwright");
 const defaultBrowserTimeout = 30000;
 const exportUrl = `file://${path_1.default.normalize(path_1.default.join(__dirname, "/../export.html"))}`;
 const resultInfoSelector = "#result-info";
@@ -17,12 +16,8 @@ async function launchExporter(options = {}) {
     if (typeof options.callback !== "function") {
         options.callback = closeBrowser;
     }
-    if (typeof options.debug !== "boolean") {
-        options.debug = false;
-    }
-    (0, utilities_1.debugMessage)(options.debug, "Launching Browser via Puppeteer");
-    const browser = await puppeteer_1.default.launch({
-        headless: true,
+    const browser = await playwright_1.chromium.launch({
+        headless: false,
         args: [
             "--disable-gpu",
             "--no-sandbox",
@@ -31,14 +26,11 @@ async function launchExporter(options = {}) {
             "--hide-scrollbars",
         ],
     });
-    (0, utilities_1.debugMessage)(options.debug, "Preparing a New Page");
     const page = await browser.newPage();
     page.on("console", (message) => console.debug("Browser:", message.text()));
-    (0, utilities_1.debugMessage)(options.debug, "Navigating to the Exporter");
     await page.goto(exportUrl, {
-        waitUntil: "networkidle0",
+        waitUntil: "networkidle",
     });
-    (0, utilities_1.debugMessage)(options.debug, `Setting Up Browser Timeout in ${options.timeout} ms`);
     const timeout = setTimeout(options.callback.bind(null, browser), options.timeout);
     return {
         browser,
@@ -47,19 +39,18 @@ async function launchExporter(options = {}) {
     };
 }
 exports.launchExporter = launchExporter;
-async function render(page, debug = false, ...args) {
-    (0, utilities_1.debugMessage)(debug, "Rendering Diagram");
-    await page.evaluate((args) => {
+async function render(page, input, pageIndex, format) {
+    await page.evaluate(([input, pageIndex, format]) => {
         // @ts-ignore
-        const { graph, editorUi } = render(...args);
+        const { graph, editorUi } = render(input, pageIndex, format);
         // @ts-ignore
         window.graph = graph;
         // @ts-ignore
         window.editorUi = editorUi;
-    }, args);
-    (0, utilities_1.debugMessage)(debug, "Awaiting Render Result Information");
-    const resultInfo = await page.waitForSelector(resultInfoSelector);
-    // @ts-ignore
+    }, [input, pageIndex, format]);
+    const resultInfo = await page.waitForSelector(resultInfoSelector, {
+        state: "attached",
+    });
     const { bounds, scale } = await resultInfo.evaluate((el) => {
         return {
             bounds: {
@@ -71,7 +62,6 @@ async function render(page, debug = false, ...args) {
             scale: parseInt(el.getAttribute("data-scale") ?? "0"),
         };
     });
-    (0, utilities_1.debugMessage)(debug, "Result Info with Bounds:", bounds, "Scale:", scale);
     return { bounds, scale };
 }
 exports.render = render;
