@@ -1,20 +1,18 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Format = void 0;
-const path_1 = require("path");
-const playwright_1 = require("playwright");
-var Format;
+import { join, normalize } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { chromium } from "playwright";
+export var Format;
 (function (Format) {
     Format["JPEG"] = "jpeg";
     Format["PDF"] = "pdf";
     Format["PNG"] = "png";
     Format["SVG"] = "svg";
-})(Format = exports.Format || (exports.Format = {}));
+})(Format || (Format = {}));
 const DEFAULT_BROWSER_TIMEOUT = 30000;
-const EXPORT_URL = `file://${(0, path_1.normalize)((0, path_1.join)(__dirname, "./export/index.html"))}`;
+const EXPORT_URL = pathToFileURL(normalize(join(fileURLToPath(import.meta.url), "../export/index.html"))).toString();
 const RESULT_INFO_SELECTOR = "#result-info";
 const BORDER = 2;
-class Exporter {
+export default class Exporter {
     browser;
     timeout;
     page = null;
@@ -27,8 +25,8 @@ class Exporter {
             timeout: DEFAULT_BROWSER_TIMEOUT,
             callback: closeBrowser,
         }, opt);
-        const browser = await playwright_1.chromium.launch({
-            headless: false,
+        const browser = await chromium.launch({
+            headless: true,
             args: [
                 "--disable-gpu",
                 "--no-sandbox",
@@ -130,7 +128,6 @@ class Exporter {
         }, [scale, transparency]);
     }
 }
-exports.default = Exporter;
 function closeBrowser(browser) {
     return async () => {
         console.warn("Closing browser from timeout");

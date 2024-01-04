@@ -1,33 +1,36 @@
-import Exporter, {Format} from "../../src";
+import {vi} from "vitest";
+import Exporter, {Format} from "../../index";
 
-jest.mock("playwright", () => {
-	const playwright = {...jest.requireActual("playwright")};
+vi.mock("playwright", async () => {
+	const playwright = {...await vi.importActual("playwright")};
 
-	playwright.Browser = jest.fn(() => {
+	playwright.Browser = vi.fn(() => {
 		return {
-			close: jest.fn(),
-			newPage: jest.fn(() => {
+			close: vi.fn(),
+			newPage: vi.fn(() => {
+				// @ts-ignore
 				return Promise.resolve(new playwright.Page());
 			}),
 		};
 	});
 
-	playwright.Page = jest.fn(() => {
+	playwright.Page = vi.fn(() => {
 		return {
-			evaluate: jest.fn(),
-			goto: jest.fn(),
-			on: jest.fn(),
-			screenshot: jest.fn(),
-			setViewportSize: jest.fn(),
-			waitForSelector: jest.fn(() => {
+			evaluate: vi.fn(),
+			goto: vi.fn(),
+			on: vi.fn(),
+			screenshot: vi.fn(),
+			setViewportSize: vi.fn(),
+			waitForSelector: vi.fn(() => {
+				// @ts-ignore
 				return Promise.resolve(new playwright.ElementHandle());
 			}),
 		};
 	});
 
-	playwright.ElementHandle = jest.fn(() => {
+	playwright.ElementHandle = vi.fn(() => {
 		return {
-			evaluate: jest.fn(() => {
+			evaluate: vi.fn(() => {
 				return Promise.resolve({
 					bounds: {
 						x: 0,
@@ -41,7 +44,9 @@ jest.mock("playwright", () => {
 		};
 	});
 
-	playwright.chromium.launch = jest.fn(() => {
+	// @ts-ignore
+	playwright.chromium.launch = vi.fn(() => {
+		// @ts-ignore
 		return Promise.resolve(new playwright.Browser());
 	});
 
@@ -63,17 +68,17 @@ describe("launchExporter", () => {
 	});
 
 	it("sets up a timeout to close the browser after a timeout", async () => {
-		jest.useFakeTimers();
-		jest.spyOn(global, "setTimeout");
+		vi.useFakeTimers();
+		vi.spyOn(global, "setTimeout");
 		expect.assertions(4);
 
-		const callback = jest.fn();
+		const callback = vi.fn();
 
 		await Exporter.launch({
 			timeout: 500,
 			callback,
 		});
-		jest.runAllTimers();
+		vi.runAllTimers();
 
 		expect(callback).toHaveBeenCalledTimes(1);
 		expect(setTimeout).toHaveBeenCalledTimes(1);
@@ -137,11 +142,11 @@ describe("exportImage", () => {
 	});
 
 	it("closes the browser without invoking the timeout callback", async () => {
-		jest.useFakeTimers();
-		jest.spyOn(global, "clearTimeout");
+		vi.useFakeTimers();
+		vi.spyOn(global, "clearTimeout");
 		expect.assertions(3);
 
-		const callback = jest.fn();
+		const callback = vi.fn();
 
 		const exporter = await Exporter.launch();
 		if (!exporter.page) {

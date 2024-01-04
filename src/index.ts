@@ -1,4 +1,5 @@
-import {join, normalize} from "path";
+import {join, normalize} from "node:path";
+import {fileURLToPath, pathToFileURL} from "node:url";
 import {type Browser, chromium, type Page} from "playwright";
 
 export enum Format {
@@ -26,7 +27,7 @@ export interface RenderResult {
 }
 
 const DEFAULT_BROWSER_TIMEOUT = 30000;
-const EXPORT_URL = `file://${normalize(join(__dirname, "./export/index.html"))}`;
+const EXPORT_URL = pathToFileURL(normalize(join(fileURLToPath(import.meta.url), "../export/index.html"))).toString();
 const RESULT_INFO_SELECTOR = "#result-info";
 const BORDER = 2;
 
