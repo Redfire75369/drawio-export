@@ -5,7 +5,7 @@
 	"description": "Draw.io Exports",
 	"license": "MIT",
 	"author": "Redfire <redfire75369@hotmail.com>",
-	"packageManager": "yarn@3.4.1",
+	"packageManager": "yarn@4.0.2",
 	"main": "dist/index.js",
 	"repository": "github:Redfire75369/drawio-export",
 	"homepage": "https://github.com/Redfire75369/drawio-export",
@@ -19,12 +19,12 @@
 		"playwright": "1.40.1"
 	},
 	"devDependencies": {
-		"@types/jest-image-snapshot": "6.1.0",
-		"@types/node": "18.15.0",
+		"@types/jest-image-snapshot": "6.4.0",
+		"@types/node": "20.10.6",
 		"copyfiles": "2.4.1",
-		"jest-image-snapshot": "6.1.0",
-		"jimp": "0.22.7",
-		"typescript": "4.9.5",
+		"jest-image-snapshot": "6.4.0",
+		"jimp": "0.22.10",
+		"typescript": "5.3.3",
 		"vitest": "1.1.2"
 	},
 	"files": [

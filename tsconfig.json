@@ -18,7 +18,6 @@
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		"importsNotUsedAsValues": "error",
 		"isolatedModules": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
