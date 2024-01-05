@@ -9,7 +9,6 @@
 		],
 		"moduleResolution": "node",
 
-		"declarationDir": "dist",
 		"outDir": "dist",
 
 		"alwaysStrict": false,

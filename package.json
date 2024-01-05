@@ -7,11 +7,12 @@
 	"author": "Redfire <redfire75369@hotmail.com>",
 	"packageManager": "yarn@4.0.2",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"repository": "github:Redfire75369/drawio-export",
 	"homepage": "https://github.com/Redfire75369/drawio-export",
 	"bugs": "https://github.com/Redfire75369/drawio-export/issues",
 	"scripts": {
-		"build": "tsc -p tsconfig.json && copyfiles -u 1 src/export/* dist/",
+		"build": "tsc && copyfiles -u 1 src/export/* dist/",
 		"test": "vitest",
 		"test:run": "vitest run"
 	},
@@ -29,9 +30,7 @@
 	},
 	"files": [
 		"dist",
-		"!src",
-		"license.md",
-		"readme.md"
+		"!src"
 	],
 	"keywords": [
 		"drawio",

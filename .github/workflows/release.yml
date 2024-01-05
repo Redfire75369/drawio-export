@@ -2,22 +2,31 @@ name: Release
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/setup-node@v2
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
-      - run: npm ci --ignore-scripts
-      - run: npm run build --if-present
-      - run: |
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm publish --ignore-scripts
+          node-version: 21
+
+      - name: Install Dependencies
+        run: |
+          yarn install --immutable
+          yarn playwright install --with-deps firefox
+
+      - name: Build with tsc
+        run: yarn build
+
+      - name: Publish Package
+        run: |
+          yarn config set -H "npmAuthToken" ${NPM_TOKEN}
+          yarn npm publish --verbose
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

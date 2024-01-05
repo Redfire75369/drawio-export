@@ -1,7 +1,7 @@
-# Draw.io exports via Puppeteer
+# Draw.io Exports
 
-Node.js module for exporting Draw.io diagrams to a range of formats using Puppeteer,
-designed as a drop-in replacement for the Draw.io desktop CLI.
+Node.js module for exporting Draw.io diagrams to a range of formats using Playwright,
+designed.
 
 ### Supported Formats
 - JPEG
@@ -20,12 +20,7 @@ git submodule update --init
 
 ### Testing
 
-Tests are written with [Jest](https://jestjs.io/). To run them:
+Tests are written with [Vitest](https://vitest.dev/). To run them:
 ```console
 yarn test
-```
-
-Add the `--watch` parameter to re-run the tests when changes are detected:
-```console
-yarn test --watch
 ```
