@@ -1,8 +1,8 @@
 import {vi} from "vitest";
 import Exporter, {Format} from "../../index";
 
-vi.mock("playwright", async () => {
-	const playwright = {...await vi.importActual("playwright")};
+vi.mock("playwright-firefox", async () => {
+	const playwright = {...await vi.importActual("playwright-firefox")};
 
 	playwright.Browser = vi.fn(() => {
 		return {
@@ -18,34 +18,34 @@ vi.mock("playwright", async () => {
 		return {
 			evaluate: vi.fn(),
 			goto: vi.fn(),
+			locator: vi.fn(() => {
+				// @ts-ignore
+				return new playwright.Locator();
+			}),
 			on: vi.fn(),
 			screenshot: vi.fn(),
 			setViewportSize: vi.fn(),
-			waitForSelector: vi.fn(() => {
-				// @ts-ignore
-				return Promise.resolve(new playwright.ElementHandle());
-			}),
 		};
 	});
 
-	playwright.ElementHandle = vi.fn(() => {
+	playwright.Locator = vi.fn(() => {
 		return {
-			evaluate: vi.fn(() => {
-				return Promise.resolve({
-					bounds: {
-						x: 0,
-						y: 0,
-						width: 640,
-						height: 480,
-					},
-					scale: 1,
-				});
+			waitFor: vi.fn(() => Promise.resolve()),
+			getAttribute: vi.fn((attribute) => {
+				switch (attribute) {
+					case "data-bounds-x": return Promise.resolve(0);
+					case "data-bounds-y": return Promise.resolve(0);
+					case "data-bounds-width": return Promise.resolve(640);
+					case "data-bounds-height": return Promise.resolve(480);
+					case "data-scale": return Promise.resolve(1);
+					default: return Promise.resolve(2);
+				}
 			}),
 		};
 	});
 
 	// @ts-ignore
-	playwright.chromium.launch = vi.fn(() => {
+	playwright.firefox.launch = vi.fn(() => {
 		// @ts-ignore
 		return Promise.resolve(new playwright.Browser());
 	});

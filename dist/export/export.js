@@ -14,11 +14,7 @@ function initializeGraph(document) {
 	const graph = new Graph(container);
 	graph.setEnabled(false);
 	graph.foldingEnabled = false;
-
-	const editor = new Editor(true, null, null, graph, false);
-	const editorUi = new EditorUi(editor, null, null);
-
-	return {container, graph, editorUi};
+	return graph;
 }
 
 function monkeypatchGraph(graph) {
@@ -60,7 +56,7 @@ function parseInput(input) {
 		);
 	}
 
-	return {node, xmlDoc};
+	return xmlDoc;
 }
 
 function decodeDiagram(graph, xmlDoc) {
@@ -99,17 +95,13 @@ function scaleGraph(graph) {
 }
 
 function renderPage(document, xmlDoc, format) {
-	const {graph, editorUi} = initializeGraph(document);
+	const graph = initializeGraph(document);
 	monkeypatchGraph(graph);
 	decodeDiagram(graph, xmlDoc);
 
-	document.body.style.backgroundColor = normalizeBackgroundColor(
-		xmlDoc,
-		format
-	);
-	const {bounds, scale} = scaleGraph(graph);
+	document.body.style.backgroundColor = normalizeBackgroundColor(xmlDoc, format);
 
-	return {bounds, scale, graph, editorUi};
+	return {...scaleGraph(graph), graph};
 }
 
 function writeResultInfo(document, pageCount, pageId, bounds, scale) {
@@ -134,22 +126,25 @@ function writeResultInfo(document, pageCount, pageId, bounds, scale) {
 function render(input, pageIndex, format) {
 	console.debug("Rendering page", pageIndex, "as", format);
 
-	const {xmlDoc} = parseInput(input);
+	const xmlDoc = parseInput(input);
 	const diagrams = xmlDoc.documentElement.getElementsByTagName("diagram");
 
 	const diagramNode = Editor.parseDiagramNode(diagrams[pageIndex]);
 	const diagramXmlDoc = diagramNode.ownerDocument;
+	console.debug(diagramNode, diagramXmlDoc);
 	const diagramId = diagrams[pageIndex].getAttribute("id");
 
-	const {bounds, scale, graph, editorUi} = renderPage(document, diagramXmlDoc, format);
+	const {bounds, scale, graph} = renderPage(document, diagramXmlDoc, format);
 	writeResultInfo(document, diagrams.length, diagramId, bounds, scale);
 
-	console.debug("Editor UI", editorUi);
-	return {graph, editorUi};
+	return graph;
 }
 
 // Exposed for Playwright
-async function exportSvg(graph, editorUi, scale, transparency) {
+async function exportSvg(graph, scale, transparency) {
+	const editor = new Editor(true, null, null, graph, false);
+	const editorUi = new EditorUi(editor, null, null);
+
 	let background = graph.background;
 	if (background === mxConstants.NONE) {
 		background = null;

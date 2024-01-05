@@ -1,6 +1,6 @@
 import { join, normalize } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { chromium } from "playwright";
+import { firefox } from "playwright-firefox";
 export var Format;
 (function (Format) {
     Format["JPEG"] = "jpeg";
@@ -14,10 +14,11 @@ const RESULT_INFO_SELECTOR = "#result-info";
 const BORDER = 2;
 export default class Exporter {
     browser;
+    page;
     timeout;
-    page = null;
-    constructor(browser, timeout) {
+    constructor(browser, page, timeout) {
         this.browser = browser;
+        this.page = page;
         this.timeout = timeout;
     }
     static async launch(opt = {}) {
@@ -25,55 +26,31 @@ export default class Exporter {
             timeout: DEFAULT_BROWSER_TIMEOUT,
             callback: closeBrowser,
         }, opt);
-        const browser = await chromium.launch({
-            headless: true,
-            args: [
-                "--disable-gpu",
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--hide-scrollbars",
-            ],
-        });
-        const exporter = new Exporter(browser, null);
-        await exporter.init();
-        exporter.timeout = setTimeout(() => options.callback(browser), options.timeout);
-        return exporter;
+        const browser = await firefox.launch();
+        const page = await browser.newPage();
+        page.on("console", (message) => console.debug("Browser:", message.text()));
+        await page.goto(EXPORT_URL);
+        const timeout = setTimeout(() => options.callback(browser), options.timeout);
+        return new Exporter(browser, page, timeout);
     }
     async render(input, pageIndex, format) {
-        if (!this.page) {
-            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-        }
         await this.page.evaluate(([input, pageIndex, format]) => {
+            debugger;
             // @ts-ignore
-            const { graph, editorUi } = render(input, pageIndex, format);
-            // @ts-ignore
-            window.graph = graph;
-            // @ts-ignore
-            window.editorUi = editorUi;
+            window.graph = render(input, pageIndex, format);
         }, [input, pageIndex, format]);
-        const resultInfo = await this.page.waitForSelector(RESULT_INFO_SELECTOR, {
+        const locator = this.page.locator(RESULT_INFO_SELECTOR);
+        await locator.waitFor({
             state: "attached",
         });
-        const { bounds, scale } = await resultInfo.evaluate((el) => {
-            return {
-                bounds: {
-                    x: parseInt(el.getAttribute("data-bounds-x") ?? "0"),
-                    y: parseInt(el.getAttribute("data-bounds-y") ?? "0"),
-                    width: parseInt(el.getAttribute("data-bounds-width") ?? "0"),
-                    height: parseInt(el.getAttribute("data-bounds-height") ?? "0"),
-                },
-                scale: parseInt(el.getAttribute("data-scale") ?? "0"),
-            };
-        });
+        const bounds = {
+            x: parseInt(await locator.getAttribute("data-bounds-x") ?? "0"),
+            y: parseInt(await locator.getAttribute("data-bounds-y") ?? "0"),
+            width: parseInt(await locator.getAttribute("data-bounds-width") ?? "0"),
+            height: parseInt(await locator.getAttribute("data-bounds-height") ?? "0"),
+        };
+        const scale = parseInt(await locator.getAttribute("data-scale") ?? "0");
         return { bounds, scale };
-    }
-    async init() {
-        this.page = await this.browser.newPage();
-        this.page.on("console", (message) => console.debug("Browser:", message.text()));
-        await this.page.goto(EXPORT_URL, {
-            waitUntil: "networkidle",
-        });
     }
     async close() {
         await this.browser.close();
@@ -84,19 +61,16 @@ export default class Exporter {
     async exportDiagram(input, pageIndex, format) {
         switch (format) {
             case Format.JPEG:
-                return await this.exportImage(input, pageIndex, Format.JPEG);
+                return await this.exportJpeg(input, pageIndex);
             case Format.PDF:
                 return await this.exportPdf(input, pageIndex);
             case Format.PNG:
-                return await this.exportImage(input, pageIndex, Format.PNG);
+                return await this.exportPng(input, pageIndex);
             case Format.SVG:
                 return await this.exportSvg(input, pageIndex);
         }
     }
     async exportImage(input, pageIndex = 0, format = Format.PNG) {
-        if (!this.page) {
-            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-        }
         const { bounds, scale } = await this.render(input, pageIndex, format);
         const viewport = {
             width: Math.ceil(bounds.width * scale) + BORDER,
@@ -106,20 +80,20 @@ export default class Exporter {
         const screenshotOptions = { type: format, ...viewport };
         return await this.page.screenshot(screenshotOptions);
     }
+    async exportJpeg(input, pageIndex = 0) {
+        return await this.exportImage(input, pageIndex, Format.JPEG);
+    }
     async exportPdf(input, pageIndex = 0) {
-        if (!this.page) {
-            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-        }
         await this.render(input, pageIndex, Format.PDF);
         return await this.page.pdf({
             format: "A4",
             printBackground: true,
         });
     }
+    async exportPng(input, pageIndex = 0) {
+        return await this.exportImage(input, pageIndex, Format.PNG);
+    }
     async exportSvg(input, pageIndex = 0, transparency = true) {
-        if (!this.page) {
-            throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-        }
         const { scale } = await this.render(input, pageIndex, Format.SVG);
         return await this.page.evaluate(async ([scale, transparency]) => {
             debugger;

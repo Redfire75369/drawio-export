@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { type Browser, type Page } from "playwright";
+import { type Browser, type Page } from "playwright-firefox";
 export declare enum Format {
     JPEG = "jpeg",
     PDF = "pdf",
@@ -22,16 +22,17 @@ export interface RenderResult {
 }
 export default class Exporter {
     browser: Browser;
+    page: Page;
     timeout: ReturnType<typeof setTimeout> | null;
-    page: Page | null;
-    constructor(browser: Browser, timeout: ReturnType<typeof setTimeout> | null);
+    constructor(browser: Browser, page: Page, timeout: ReturnType<typeof setTimeout> | null);
     static launch(opt?: LaunchOptions): Promise<Exporter>;
     render(input: string, pageIndex: number, format: Format): Promise<RenderResult>;
-    init(): Promise<void>;
     close(): Promise<void>;
     exportDiagram(input: string, pageIndex: number, format: Format): Promise<string | Buffer>;
     exportImage(input: string, pageIndex?: number, format?: Format.JPEG | Format.PNG): Promise<Buffer>;
+    exportJpeg(input: string, pageIndex?: number): Promise<Buffer>;
     exportPdf(input: string, pageIndex?: number): Promise<Buffer>;
+    exportPng(input: string, pageIndex?: number): Promise<Buffer>;
     exportSvg(input: string, pageIndex?: number, transparency?: boolean): Promise<string>;
 }
 //# sourceMappingURL=index.d.ts.map

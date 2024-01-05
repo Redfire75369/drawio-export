@@ -1,6 +1,6 @@
 import {join, normalize} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
-import {type Browser, chromium, type Page} from "playwright";
+import {type Browser, firefox, type Page} from "playwright-firefox";
 
 export enum Format {
 	JPEG = "jpeg",
@@ -32,9 +32,7 @@ const RESULT_INFO_SELECTOR = "#result-info";
 const BORDER = 2;
 
 export default class Exporter {
-	public page: Page | null = null;
-
-	constructor(public browser: Browser, public timeout: ReturnType<typeof setTimeout> | null) {
+	constructor(public browser: Browser, public page: Page, public timeout: ReturnType<typeof setTimeout> | null) {
 	}
 
 	static async launch(opt: LaunchOptions = {}) {
@@ -43,70 +41,45 @@ export default class Exporter {
 			callback: closeBrowser,
 		}, opt);
 
-		const browser = await chromium.launch({
-			headless: true,
-			args: [
-				"--disable-gpu",
-				"--no-sandbox",
-				"--disable-setuid-sandbox",
-				"--disable-dev-shm-usage",
-				"--hide-scrollbars",
-			],
-		});
+		const browser = await firefox.launch();
 
-		const exporter = new Exporter(browser, null);
-		await exporter.init();
+		const page = await browser.newPage();
+		page.on("console", (message) => console.debug("Browser:", message.text()));
 
-		exporter.timeout = setTimeout(
+		await page.goto(EXPORT_URL);
+
+		const timeout = setTimeout(
 			() => options.callback(browser),
 			options.timeout
 		);
 
-		return exporter;
+		return new Exporter(browser, page, timeout);
 	}
 
 	public async render(input: string, pageIndex: number, format: Format): Promise<RenderResult> {
-		if (!this.page) {
-			throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-		}
-
 		await this.page.evaluate(
 			([input, pageIndex, format]) => {
+				debugger;
 				// @ts-ignore
-				const {graph, editorUi} = render(input, pageIndex, format);
-				// @ts-ignore
-				window.graph = graph;
-				// @ts-ignore
-				window.editorUi = editorUi;
+				window.graph = render(input, pageIndex, format);
 			},
 			[input, pageIndex, format] as [string, number, Format]
 		);
 
-		const resultInfo = await this.page.waitForSelector(RESULT_INFO_SELECTOR, {
+		const locator = this.page.locator(RESULT_INFO_SELECTOR);
+		await locator.waitFor({
 			state: "attached",
 		});
 
-		const {bounds, scale} = await resultInfo.evaluate((el) => {
-			return {
-				bounds: {
-					x: parseInt(el.getAttribute("data-bounds-x") ?? "0"),
-					y: parseInt(el.getAttribute("data-bounds-y") ?? "0"),
-					width: parseInt(el.getAttribute("data-bounds-width") ?? "0"),
-					height: parseInt(el.getAttribute("data-bounds-height") ?? "0"),
-				},
-				scale: parseInt(el.getAttribute("data-scale") ?? "0"),
-			};
-		});
+		const bounds: Bounds = {
+			x: parseInt(await locator.getAttribute("data-bounds-x") ?? "0"),
+			y: parseInt(await locator.getAttribute("data-bounds-y") ?? "0"),
+			width: parseInt(await locator.getAttribute("data-bounds-width") ?? "0"),
+			height: parseInt(await locator.getAttribute("data-bounds-height") ?? "0"),
+		};
+		const scale = parseInt(await locator.getAttribute("data-scale") ?? "0");
+
 		return {bounds, scale};
-	}
-
-	public async init() {
-		this.page = await this.browser.newPage();
-		this.page.on("console", (message) => console.debug("Browser:", message.text()));
-
-		await this.page.goto(EXPORT_URL, {
-			waitUntil: "networkidle",
-		});
 	}
 
 	public async close() {
@@ -119,21 +92,17 @@ export default class Exporter {
 	public async exportDiagram(input: string, pageIndex: number, format: Format): Promise<string | Buffer> {
 		switch (format) {
 			case Format.JPEG:
-				return await this.exportImage(input, pageIndex, Format.JPEG);
+				return await this.exportJpeg(input, pageIndex);
 			case Format.PDF:
 				return await this.exportPdf(input, pageIndex);
 			case Format.PNG:
-				return await this.exportImage(input, pageIndex, Format.PNG);
+				return await this.exportPng(input, pageIndex);
 			case Format.SVG:
 				return await this.exportSvg(input, pageIndex);
 		}
 	}
 
 	public async exportImage(input: string, pageIndex: number = 0, format: Format.JPEG | Format.PNG = Format.PNG): Promise<Buffer> {
-		if (!this.page) {
-			throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-		}
-
 		const {bounds, scale} = await this.render(input, pageIndex, format);
 
 		const viewport = {
@@ -146,11 +115,11 @@ export default class Exporter {
 		return await this.page.screenshot(screenshotOptions);
 	}
 
-	public async exportPdf(input: string, pageIndex: number = 0): Promise<Buffer> {
-		if (!this.page) {
-			throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-		}
+	public async exportJpeg(input: string, pageIndex: number = 0): Promise<Buffer> {
+		return await this.exportImage(input, pageIndex, Format.JPEG);
+	}
 
+	public async exportPdf(input: string, pageIndex: number = 0): Promise<Buffer> {
 		await this.render(input, pageIndex, Format.PDF);
 
 		return await this.page.pdf({
@@ -159,11 +128,11 @@ export default class Exporter {
 		});
 	}
 
-	public async exportSvg(input: string, pageIndex: number = 0, transparency: boolean = true): Promise<string> {
-		if (!this.page) {
-			throw new Error("Browser Page has not been initialised yet. Call Exporter.init()");
-		}
+	public async exportPng(input: string, pageIndex: number = 0): Promise<Buffer> {
+		return await this.exportImage(input, pageIndex, Format.PNG);
+	}
 
+	public async exportSvg(input: string, pageIndex: number = 0, transparency: boolean = true): Promise<string> {
 		const {scale} = await this.render(input, pageIndex, Format.SVG);
 
 		return await this.page.evaluate(

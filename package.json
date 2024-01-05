@@ -16,7 +16,7 @@
 		"test:run": "vitest run"
 	},
 	"dependencies": {
-		"playwright": "1.40.1"
+		"playwright-firefox": "1.40.1"
 	},
 	"devDependencies": {
 		"@types/jest-image-snapshot": "6.4.0",
@@ -30,7 +30,6 @@
 	"files": [
 		"dist",
 		"!src",
-		"!__test__",
 		"license.md",
 		"readme.md"
 	],
