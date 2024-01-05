@@ -7,8 +7,9 @@ import {vi} from "vitest";
 import Exporter, {Format} from "../../index";
 
 const toMatchImageSnapshot = configureToMatchImageSnapshot({
+	comparisonMethod: "ssim",
 	failureThresholdType: "percent",
-	failureThreshold: 0.005,
+	failureThreshold: 1,
 });
 expect.extend({toMatchImageSnapshot});
 

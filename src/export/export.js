@@ -124,14 +124,11 @@ function writeResultInfo(document, pageCount, pageId, bounds, scale) {
 
 // Exposed for Playwright
 function render(input, pageIndex, format) {
-	console.debug("Rendering page", pageIndex, "as", format);
-
 	const xmlDoc = parseInput(input);
 	const diagrams = xmlDoc.documentElement.getElementsByTagName("diagram");
 
 	const diagramNode = Editor.parseDiagramNode(diagrams[pageIndex]);
 	const diagramXmlDoc = diagramNode.ownerDocument;
-	console.debug(diagramNode, diagramXmlDoc);
 	const diagramId = diagrams[pageIndex].getAttribute("id");
 
 	const {bounds, scale, graph} = renderPage(document, diagramXmlDoc, format);
