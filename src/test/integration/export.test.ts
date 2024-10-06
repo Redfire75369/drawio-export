@@ -1,5 +1,5 @@
 import {configureToMatchImageSnapshot} from "jest-image-snapshot";
-import {MIME_PNG, read} from "jimp"
+import {JimpMime, Jimp} from "jimp";
 import {readFile} from "node:fs/promises";
 import {join, normalize} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -31,8 +31,8 @@ describe("export", () => {
 		expect.assertions(1);
 
 		const image = await exporter.exportImage(input, 0, Format.JPEG);
-		const converter = await read(image);
-		const converted = await converter.getBufferAsync(MIME_PNG);
+		const converter = await Jimp.read(image);
+		const converted = await converter.getBuffer(JimpMime.png);
 
 		expect(converted).toMatchImageSnapshot();
 	});

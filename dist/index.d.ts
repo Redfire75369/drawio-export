@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { type Browser, type Page } from "playwright-firefox";
 export declare enum Format {
     JPEG = "jpeg",
