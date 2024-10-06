@@ -14,17 +14,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 21
-          cache: yarn
+          cache: pnpm
 
       - name: Install Dependencies
         run: |
-          yarn install --immutable
-          yarn playwright install --with-deps firefox
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps firefox
 
       - name: Test with Vitest
-        run: yarn test:run
+        run: pnpm test:run
         env:
           CI: true
