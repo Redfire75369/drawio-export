@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises";
 import {join, normalize} from "node:path";
 import {fileURLToPath} from "node:url";
 import {vi} from "vitest";
-import Exporter, {Format} from "../../index";
+import Exporter, {Format} from "../../index.js";
 
 const toMatchImageSnapshot = configureToMatchImageSnapshot({
 	comparisonMethod: "ssim",

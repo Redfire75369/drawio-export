@@ -123,6 +123,11 @@ function writeResultInfo(document, pageCount, pageId, bounds, scale) {
 }
 
 // Exposed for Playwright
+/**
+ * @param input {string}
+ * @param pageIndex {number}
+ * @return Graph
+ */
 function render(input, pageIndex, format) {
 	const xmlDoc = parseInput(input);
 	const diagrams = xmlDoc.documentElement.getElementsByTagName("diagram");
@@ -138,6 +143,12 @@ function render(input, pageIndex, format) {
 }
 
 // Exposed for Playwright
+/**
+ * @param graph {Graph}
+ * @param scale {number}
+ * @param transparency {number}
+ * @returns {Promise<string>}
+ */
 async function exportSvg(graph, scale, transparency) {
 	const editor = new Editor(true, null, null, graph, false);
 	const editorUi = new EditorUi(editor, null, null);

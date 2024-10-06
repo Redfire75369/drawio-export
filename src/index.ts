@@ -1,6 +1,6 @@
 import {join, normalize} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
-import {type Browser, firefox, type Page} from "playwright-firefox";
+import {firefox, type Browser, type Page} from "playwright-firefox";
 
 export enum Format {
 	JPEG = "jpeg",
@@ -57,13 +57,13 @@ export default class Exporter {
 	}
 
 	public async render(input: string, pageIndex: number, format: Format): Promise<RenderResult> {
-		await this.page.evaluate(
+		await this.page.evaluate<void, [string, number, Format]>(
 			([input, pageIndex, format]) => {
 				debugger;
 				// @ts-ignore
 				window.graph = render(input, pageIndex, format);
 			},
-			[input, pageIndex, format] as [string, number, Format]
+			[input, pageIndex, format]
 		);
 
 		const locator = this.page.locator(RESULT_INFO_SELECTOR);
@@ -135,13 +135,13 @@ export default class Exporter {
 	public async exportSvg(input: string, pageIndex: number = 0, transparency: boolean = true): Promise<string> {
 		const {scale} = await this.render(input, pageIndex, Format.SVG);
 
-		return await this.page.evaluate(
+		return await this.page.evaluate<string, [number, boolean]>(
 			async ([scale, transparency]) => {
 				debugger;
 				// @ts-ignore
 				return await exportSvg(window.graph, window.editorUi, scale, transparency);
 			},
-			[scale, transparency] as [number, boolean]
+			[scale, transparency]
 		);
 	}
 }
