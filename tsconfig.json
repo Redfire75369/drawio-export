@@ -9,7 +9,7 @@
 		],
 		"moduleResolution": "bundler",
 
-		"outDir": "dist/lib",
+		"outDir": "dist",
 
 		"alwaysStrict": false,
 		"strict": true,

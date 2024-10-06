@@ -1,4 +1,4 @@
-import {join, normalize} from "node:path";
+import {dirname, join, normalize} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 import {firefox, type Browser, type Page} from "playwright-firefox";
 
@@ -27,7 +27,7 @@ export interface RenderResult {
 }
 
 const DEFAULT_BROWSER_TIMEOUT = 30000;
-const EXPORT_URL = pathToFileURL(normalize(join(fileURLToPath(import.meta.url), "../export/index.html"))).toString();
+const EXPORT_URL = pathToFileURL(normalize(join(dirname(fileURLToPath(import.meta.url)), "export/index.html"))).toString();
 const RESULT_INFO_SELECTOR = "#result-info";
 const BORDER = 2;
 
