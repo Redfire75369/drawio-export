@@ -3,6 +3,15 @@ const TRANSPARENT_FORMATS = ["png", "svg"];
 
 const BORDER = 2;
 
+const mxSvgCanvas2DOriginalCreateAlternateContent = mxSvgCanvas2D.prototype.createAlternateContent;
+
+/**
+ * @param enabled {boolean}
+ */
+function setSvgCanvasAlternateContent(enabled) {
+	mxSvgCanvas2D.prototype.createAlternateContent = enabled ? mxSvgCanvas2DOriginalCreateAlternateContent : () => null;
+}
+
 function initializeGraph(document) {
 	document.body.innerHTML = "";
 	const container = document.createElement("div");
@@ -17,6 +26,9 @@ function initializeGraph(document) {
 	return graph;
 }
 
+/**
+ * @param graph {Graph}
+ */
 function monkeypatchGraph(graph) {
 	const graphGetLinkForCell = graph.getLinkForCell;
 	graph.getLinkForCell = function (cell) {
@@ -44,6 +56,9 @@ function monkeypatchGraph(graph) {
 	};
 }
 
+/**
+ * @param input {string}
+ */
 function parseInput(input) {
 	const doc = mxUtils.parseXml(input);
 
@@ -158,13 +173,12 @@ async function exportSvg(graph, scale, transparency) {
 		background = null;
 	}
 
-	let cb;
-	const promise = new Promise(res => cb = res);
-	editorUi.exportSvg(
-		scale, transparency, true, false, false, // scale, transparentBackground, ignoreSelection, addShadow, editable,
-		null, BORDER, null, null, null, // embedImages, border, noCrop, currentPage, linkTarget,
-		null, "diagram", true, // keepTheme, exportType, embedFonts
-		svg => cb(svg),
-	);
-	return await promise;
+	return new Promise(res => {
+		editorUi.exportSvg(
+			scale, transparency, true, false, false, // scale, transparentBackground, ignoreSelection, addShadow, editable,
+			false, BORDER, null, null, null, // embedImages, border, noCrop, currentPage, linkTarget,
+			null, "diagram", true, // keepTheme, exportType, embedFonts
+			svg => res(svg),
+		);
+	});
 }

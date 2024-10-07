@@ -32,6 +32,6 @@ export default class Exporter {
     exportJpeg(input: string, pageIndex?: number): Promise<Buffer>;
     exportPdf(input: string, pageIndex?: number): Promise<Buffer>;
     exportPng(input: string, pageIndex?: number): Promise<Buffer>;
-    exportSvg(input: string, pageIndex?: number, transparency?: boolean): Promise<string>;
+    exportSvg(input: string, pageIndex?: number, transparency?: boolean, foreignObjectFallback?: boolean): Promise<string>;
 }
 //# sourceMappingURL=index.d.ts.map

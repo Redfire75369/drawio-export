@@ -1,4 +1,4 @@
-import { join, normalize } from "node:path";
+import { dirname, join, normalize } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { firefox } from "playwright-firefox";
 export var Format;
@@ -9,7 +9,7 @@ export var Format;
     Format["SVG"] = "svg";
 })(Format || (Format = {}));
 const DEFAULT_BROWSER_TIMEOUT = 30000;
-const EXPORT_URL = pathToFileURL(normalize(join(fileURLToPath(import.meta.url), "../export/index.html"))).toString();
+const EXPORT_URL = pathToFileURL(normalize(join(dirname(fileURLToPath(import.meta.url)), "export/index.html"))).toString();
 const RESULT_INFO_SELECTOR = "#result-info";
 const BORDER = 2;
 export default class Exporter {
@@ -35,7 +35,6 @@ export default class Exporter {
     }
     async render(input, pageIndex, format) {
         await this.page.evaluate(([input, pageIndex, format]) => {
-            debugger;
             // @ts-ignore
             window.graph = render(input, pageIndex, format);
         }, [input, pageIndex, format]);
@@ -93,13 +92,14 @@ export default class Exporter {
     async exportPng(input, pageIndex = 0) {
         return await this.exportImage(input, pageIndex, Format.PNG);
     }
-    async exportSvg(input, pageIndex = 0, transparency = true) {
+    async exportSvg(input, pageIndex = 0, transparency = true, foreignObjectFallback = false) {
         const { scale } = await this.render(input, pageIndex, Format.SVG);
-        return await this.page.evaluate(async ([scale, transparency]) => {
-            debugger;
+        return await this.page.evaluate(async ([scale, transparency, foreignObjectFallback]) => {
+            // @ts-ignore
+            setSvgCanvasAlternateContent(foreignObjectFallback);
             // @ts-ignore
             return await exportSvg(window.graph, window.editorUi, scale, transparency);
-        }, [scale, transparency]);
+        }, [scale, transparency, foreignObjectFallback]);
     }
 }
 function closeBrowser(browser) {
