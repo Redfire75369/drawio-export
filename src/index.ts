@@ -1,6 +1,6 @@
 import {dirname, join, normalize} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
-import {firefox, type Browser, type Page} from "playwright-firefox";
+import {type Browser, firefox, type Page} from "playwright-firefox";
 
 export enum Format {
 	JPEG = "jpeg",
@@ -50,7 +50,7 @@ export default class Exporter {
 
 		const timeout = setTimeout(
 			() => options.callback(browser),
-			options.timeout
+			options.timeout,
 		);
 
 		return new Exporter(browser, page, timeout);
@@ -59,11 +59,10 @@ export default class Exporter {
 	public async render(input: string, pageIndex: number, format: Format): Promise<RenderResult> {
 		await this.page.evaluate<void, [string, number, Format]>(
 			([input, pageIndex, format]) => {
-				debugger;
 				// @ts-ignore
 				window.graph = render(input, pageIndex, format);
 			},
-			[input, pageIndex, format]
+			[input, pageIndex, format],
 		);
 
 		const locator = this.page.locator(RESULT_INFO_SELECTOR);
@@ -132,16 +131,17 @@ export default class Exporter {
 		return await this.exportImage(input, pageIndex, Format.PNG);
 	}
 
-	public async exportSvg(input: string, pageIndex: number = 0, transparency: boolean = true): Promise<string> {
+	public async exportSvg(input: string, pageIndex: number = 0, transparency: boolean = true, foreignObjectFallback: boolean = false): Promise<string> {
 		const {scale} = await this.render(input, pageIndex, Format.SVG);
 
-		return await this.page.evaluate<string, [number, boolean]>(
-			async ([scale, transparency]) => {
-				debugger;
+		return await this.page.evaluate<string, [number, boolean, boolean]>(
+			async ([scale, transparency, foreignObjectFallback]) => {
+				// @ts-ignore
+				setSvgCanvasAlternateContent(foreignObjectFallback);
 				// @ts-ignore
 				return await exportSvg(window.graph, window.editorUi, scale, transparency);
 			},
-			[scale, transparency]
+			[scale, transparency, foreignObjectFallback],
 		);
 	}
 }

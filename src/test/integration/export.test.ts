@@ -54,7 +54,7 @@ describe("export", () => {
 	it("exports the first page of the flowchart fixture to SVG", async () => {
 		expect.assertions(1);
 
-		const svg = await exporter.exportSvg(input, 0);
+		const svg = await exporter.exportSvg(input, 0, false);
 
 		expect(svg).toMatchSnapshot();
 	});
