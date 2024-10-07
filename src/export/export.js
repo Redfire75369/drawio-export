@@ -158,13 +158,12 @@ async function exportSvg(graph, scale, transparency) {
 		background = null;
 	}
 
-	let cb;
-	const promise = new Promise(res => cb = res);
-	editorUi.exportSvg(
-		scale, transparency, true, false, false, // scale, transparentBackground, ignoreSelection, addShadow, editable,
-		null, BORDER, null, null, null, // embedImages, border, noCrop, currentPage, linkTarget,
-		null, "diagram", true, // keepTheme, exportType, embedFonts
-		svg => cb(svg),
-	);
-	return await promise;
+	return new Promise(res => {
+		editorUi.exportSvg(
+			scale, transparency, true, false, false, // scale, transparentBackground, ignoreSelection, addShadow, editable,
+			false, BORDER, null, null, null, // embedImages, border, noCrop, currentPage, linkTarget,
+			null, "diagram", true, // keepTheme, exportType, embedFonts
+			svg => res(svg),
+		);
+	});
 }
